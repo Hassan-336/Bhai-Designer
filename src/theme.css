@@ -1,0 +1,52 @@
+/* ============================================================
+   THEME FILE — fonts aur colors SIRF yahan se change honge.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;0,900;1,500;1,800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  /* ---- Fonts (ek hi jagah) ---- */
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---- Sizes ---- */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1.0625rem;
+  --fs-xl: clamp(3rem, 9vw, 8rem);
+  --radius: 14px;
+  --pill-radius: 999px;
+  --ease: cubic-bezier(.7, 0, .2, 1);
+
+  /* ---- Colors: default = Blue ---- */
+  --bg: #1e2fff;
+  --bg-2: #3a4bff;           /* soft glow */
+  --fg: #ffffff;
+  --fg-muted: rgba(255, 255, 255, .75);
+  --surface: rgba(255, 255, 255, .12);
+  --border: rgba(255, 255, 255, .3);
+  --accent: #ffffff;         /* buttons */
+  --accent-fg: #1e2fff;      /* text on buttons */
+  --highlight: #ffb14a;      /* underline / secondary seconds hand */
+  --bubble-bg: #ffffff;
+  --bubble-fg: #1e2fff;
+}
+
+[data-theme='cream'] {
+  --bg: #f5ecd9;
+  --bg-2: #ffffff;
+  --fg: #1e2fff;
+  --fg-muted: rgba(30, 47, 255, .75);
+  --surface: rgba(30, 47, 255, .08);
+  --border: rgba(30, 47, 255, .3);
+  --accent: #1e2fff;
+  --accent-fg: #f5ecd9;
+  --highlight: #ff5a36;
+}
+
+[data-theme='client'] {
+  --bg: #16208f;
+  --bg-2: #2b3bff;
+  --highlight: #ffd24a;
+  --bubble-bg: #fff6e0;
+}
