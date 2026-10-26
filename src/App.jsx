@@ -108,6 +108,7 @@ function Home({ theme, bubbles }) {
 function Page({ title, text }) {
   return (
     <motion.main className="page" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}>
+      <Link to="/" className="back-home" id="back-home">← Home</Link>
       <h1>{title}</h1>
       <p>{text}</p>
       <div className="grid">

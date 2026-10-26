@@ -60,6 +60,8 @@
 .page { min-height: 100vh; padding: 150px 8vw 140px; }
 .page h1 { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 900; letter-spacing: -.04em; line-height: .95; }
 .page p { margin-top: 16px; max-width: 520px; font-size: var(--fs-md); color: var(--fg-muted); }
+.back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); border-radius: 999px; font: 700 var(--fs-sm)/1 var(--font-mono); text-transform: uppercase; text-decoration: none; transition: transform .2s; }
+.back-home:hover { transform: translateX(-4px); }
 .grid { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 .card { aspect-ratio: 4/3; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 800; font-size: var(--fs-sm); cursor: pointer; }
 
@@ -72,6 +74,11 @@
   .switcher .label { display: none; }
   .home { padding-top: 150px; }
   .credit { display: none; }
-  .watch { left: 14px; bottom: 14px; }
+  .watch { left: 10px; bottom: 10px; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 14px; }
+  .watch-face { width: 30px; height: 30px; }
+  .watch-text b { font-size: .6rem; }
+  .watch-text small { font-size: .55rem; }
+  .watch-tip { display: none; }
+  .page { padding: 170px 6vw 100px; }
   .bubble { font-size: var(--fs-xs); padding: 10px 14px; }
 }
