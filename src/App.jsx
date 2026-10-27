@@ -1,8 +1,28 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import logo from './assets/logo.png' // 👈 apna logo yahan replace karo: src/assets/logo.png
 import './App.css'
+
+/* 📁 Images auto-load: bas file src/assets/<page-folder>/ mein daal do, code change nahi karna */
+const glob = (files) => Object.entries(files).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([, url]) => url)
+const PAGE_IMAGES = {
+  logofolio: glob(import.meta.glob('./assets/logofolio/*.{jpg,jpeg,png,webp,gif,svg}', { eager: true, query: '?url', import: 'default' })),
+  design: glob(import.meta.glob('./assets/design/*.{jpg,jpeg,png,webp,gif,svg}', { eager: true, query: '?url', import: 'default' })),
+  branding: glob(import.meta.glob('./assets/branding/*.{jpg,jpeg,png,webp,gif,svg}', { eager: true, query: '?url', import: 'default' })),
+}
+/* 🎨 Logo section: color logos src/assets/logos/ mein daalo (optional B/W: same naam + -bw, e.g. fred.png & fred-bw.png) */
+const LOGO_FILES = import.meta.glob('./assets/logos/*.{jpg,jpeg,png,webp,gif,svg}', { eager: true, query: '?url', import: 'default' })
+const LOGOS = (() => {
+  const base = (p) => p.split('/').pop().replace(/\.[^.]+$/, '')
+  const entries = Object.entries(LOGO_FILES)
+  const bw = Object.fromEntries(entries.filter(([p]) => base(p).endsWith('-bw')).map(([p, u]) => [base(p).slice(0, -3), u]))
+  const color = Object.fromEntries(entries.filter(([p]) => !base(p).endsWith('-bw')).map(([p, u]) => [base(p), u]))
+  const names = [...new Set([...Object.keys(color), ...Object.keys(bw)])]
+  return names.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((name) => ({ name, color: color[name] || bw[name], bw: color[name] ? bw[name] : undefined, only: !color[name] }))
+})()
+const ABOUT_PHOTO = glob(import.meta.glob('./assets/about/*.{jpg,jpeg,png,webp,gif,svg}', { eager: true, query: '?url', import: 'default' }))[0]
 
 /* ✏️ Apni marzi se yahan messages change karo */
 const CLIENT_MESSAGES = [
@@ -15,9 +35,9 @@ const CLIENT_MESSAGES = [
 ]
 
 const THEMES = [
-  { id: 'cream', label: 'Cream', emoji: '🌕' },
-  { id: 'blue', label: 'Blue', emoji: '🔵' },
-  { id: 'client', label: 'Client "Favor"', emoji: '🙏' },
+  { id: 'cream', label: 'Cream', emoji: '' },
+  { id: 'blue', label: 'Blue', emoji: '' },
+  { id: 'client', label: 'Client "Favor"', emoji: '' },
 ]
 
 function Watch() {
@@ -95,29 +115,163 @@ function Home({ theme, bubbles }) {
         <h1 className="sr-only">Ahsan Mahmood - Graphic Designer</h1>
         <div className="logo" style={{ '--logo': `url(${logo})` }} role="img" aria-label="Ahsan Mahmood logo" />
       </motion.div>
-      <p className="tagline">
-        <b>A job title</b> <i>that always gets asked to do things for free, saying it's just a</i>{' '}
-        <u>'small favor.'</u>
-      </p>
-      <Link to="/logofolio" className="cta" id="cta-work">View my work →</Link>
-      <span className="hint">↗ Top right se theme change karke dekho</span>
+      <div className="home-bottom">
+        <p className="tagline">
+          <b>A job title</b> <i>that always gets asked to do things for free, saying it's just a</i>{' '}
+          <u>'small favor.'</u>
+        </p>
+        <Link to="/logofolio" className="cta" id="cta-work">View my work →</Link>
+        <span className="hint">↗ Top right se theme change karke dekho</span>
+      </div>
     </motion.main>
   )
 }
 
-function Page({ title, text }) {
+function LogoReveal() {
+  const ref = useRef(null)
+  const [cols, setCols] = useState(() => (innerWidth < 700 ? 3 : 4))
+  const [revealed, setRevealed] = useState(0)
+  const [hover, setHover] = useState(-1)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  useEffect(() => {
+    const f = () => setCols(innerWidth < 700 ? 3 : 4)
+    addEventListener('resize', f)
+    return () => removeEventListener('resize', f)
+  }, [])
+  // scroll progress -> kitne columns ka color aa chuka hai (last column par ruk jata hai)
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    setRevealed(Math.min(cols, Math.floor(Math.max(0, p - 0.05) / 0.8 * (cols + 1))))
+  })
+  if (!LOGOS.length) {
+    return <p className="empty">Logo section: logos <code>src/assets/logos/</code> mein daalo.</p>
+  }
+  const rows = Math.ceil(LOGOS.length / cols)
+  return (
+    <section className="logo-reveal" ref={ref} style={{ '--steps': cols + 2 }}>
+      <div className="logo-sticky">
+        <h2 className="logo-reveal-title">Logos <small>scroll karo ↓</small></h2>
+        <div className="logo-grid" style={{ '--cols': cols, '--rows': rows }}>
+          {LOGOS.map((l, i) => {
+            const on = i % cols < revealed || hover === i
+            return (
+              <motion.div key={l.name} className={'logo-item' + (on ? ' on' : '')}
+                onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(-1)}
+                onTouchStart={() => setHover(i)} onTouchEnd={() => setHover(-1)}
+                animate={{ scale: hover === i ? 1.35 : 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                style={{ zIndex: hover === i ? 5 : 1 }}>
+                {l.bw && <img className="bw" src={l.bw} alt="" aria-hidden="true" />}
+                <img className={l.bw ? 'color' : 'color auto'} src={l.color} alt={l.name} loading="lazy" />
+              </motion.div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Page({ title, text, folder, extra }) {
+  const images = (folder && PAGE_IMAGES[folder]) || []
   return (
     <motion.main className="page" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}>
       <Link to="/" className="back-home" id="back-home">← Home</Link>
       <h1>{title}</h1>
       <p>{text}</p>
-      <div className="grid">
-        {[1, 2, 3, 4, 5, 6].map((n) => (
-          <motion.div key={n} className="card" whileHover={{ y: -8, rotate: n % 2 ? -1.5 : 1.5 }}>
-            <span>{title} #{n}</span>
-          </motion.div>
+      {folder && (
+        <div className="grid">
+          {images.length
+            ? images.map((src, n) => (
+              <motion.div key={src} className="card has-img" whileHover={{ y: -8, rotate: n % 2 ? -1.5 : 1.5 }}>
+                <img src={src} alt={`${title} ${n + 1}`} loading="lazy" />
+              </motion.div>
+            ))
+            : <p className="empty">Images add karne ke liye files <code>src/assets/{folder}/</code> mein daalo.</p>}
+        </div>
+      )}
+      {extra}
+    </motion.main>
+  )
+}
+
+const ABOUT = {
+  role: 'Creative Designer',
+  bio: 'Creative and detail-oriented Graphic Designer with over 3 years of professional experience specializing in brand identity, print collateral, and packaging design. Proven track record of managing end-to-end print production, advertising campaigns, and visual assets for diverse local and corporate brands. Adept at translating brand values into compelling visual systems that resonate with target audiences and elevate market presence. Passionate about blending aesthetic precision with strategic storytelling to deliver memorable design experiences across print and digital mediums.',
+  stats: [['3+', 'Years experience'], ['5', 'Companies'], ['10', 'Core skills']],
+  work: [
+    ['July 2024 – Present', 'Eastgate Industries', 'Creative Designer'],
+    ['Nov 2023 – July 2024', 'The Howdy Group', 'Graphic Designer'],
+    ['May 2023 – Nov 2023', 'Art Techniques', 'Graphic Designer'],
+    ['August 2022 – May 2023', 'Dynamic Packaging Pvt. Ltd.', 'Pre-Press Designer'],
+    ['July 2021 – July 2022', 'Ideal Printer', 'Graphic Designer'],
+  ],
+  software: ['Adobe Photoshop', 'Adobe Illustrator', 'Adobe InDesign', 'Adobe After Effects', 'Figma'],
+  skills: ['Graphic Design', 'Brand Identity', 'Packaging Design', 'Social Media Campaign', 'Print-ready files', 'Layout Design', 'AI Image Generation', 'Design Thinking', 'Typography', 'Adaptability'],
+  edu: [
+    ['2024 – Present (Ongoing)', 'ADP in Marketing', 'Virtual University'],
+    ['2019 – 2022', 'DAE (Printing & Graphic Arts)', 'Govt. College of Technology'],
+  ],
+}
+
+function About() {
+  const fade = (i = 0) => ({ initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-40px' }, transition: { duration: .6, delay: i * .08 } })
+  return (
+    <motion.main className="page about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <Link to="/" className="back-home" id="back-home">← Home</Link>
+
+      <section className="about-hero">
+        <motion.div className="about-photo" {...fade()}>
+          {ABOUT_PHOTO
+            ? <img src={ABOUT_PHOTO} alt="Ahsan Mahmood" />
+            : <div className="about-photo-fallback" style={{ '--logo': `url(${logo})` }} role="img" aria-label="Ahsan Mahmood logo" />}
+          <span className="about-badge">✦ Open for work</span>
+        </motion.div>
+        <motion.div className="about-intro" {...fade(1)}>
+          <span className="eyebrow">Hello, I'm</span>
+          <h1>Ahsan Mahmood</h1>
+          <h2>{ABOUT.role}</h2>
+          <p>{ABOUT.bio}</p>
+          <div className="about-contact">
+            <a href="mailto:m.ahsanmahmood126@gmail.com">m.ahsanmahmood126@gmail.com</a>
+            <a href="tel:+923084583430">+92 308 4583430</a>
+            <span>Lahore, Pakistan</span>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="about-stats">
+        {ABOUT.stats.map(([n, l], i) => (
+          <motion.div key={l} className="stat" {...fade(i)}><b>{n}</b><span>{l}</span></motion.div>
         ))}
-      </div>
+      </section>
+
+      <section className="about-cols">
+        <motion.div className="about-block" {...fade()}>
+          <h3>Work Experience</h3>
+          <ul className="timeline">
+            {ABOUT.work.map(([d, c, r]) => (
+              <li key={c}><small>{d}</small><b>{c}</b><span>{r}</span></li>
+            ))}
+          </ul>
+        </motion.div>
+        <div className="about-side">
+          <motion.div className="about-block" {...fade(1)}>
+            <h3>Softwares</h3>
+            <div className="chips">{ABOUT.software.map((s) => <span key={s}>{s}</span>)}</div>
+          </motion.div>
+          <motion.div className="about-block" {...fade(2)}>
+            <h3>Core Skills</h3>
+            <div className="chips">{ABOUT.skills.map((s) => <span key={s}>{s}</span>)}</div>
+          </motion.div>
+          <motion.div className="about-block" {...fade(3)}>
+            <h3>Education</h3>
+            <ul className="timeline">
+              {ABOUT.edu.map(([d, c, r]) => (
+                <li key={c}><small>{d}</small><b>{c}</b><span>{r}</span></li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
+      </section>
     </motion.main>
   )
 }
@@ -186,10 +340,10 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home theme={theme} bubbles={bubbles} />} />
-          <Route path="/about" element={<Page title="About" text="Ahsan Mahmood — graphic designer." />} />
-          <Route path="/logofolio" element={<Page title="Logofolio" text="Selected logo work." />} />
-          <Route path="/design" element={<Page title="Design" text="Posters, social media & print design." />} />
-          <Route path="/branding" element={<Page title="Branding" text="Complete brand identities." />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/logofolio" element={<Page title="Logofolio" text="Selected logo work." folder="logofolio" />} />
+          <Route path="/design" element={<Page title="Design" text="Posters, social media & print design." folder="design" extra={<LogoReveal />} />} />
+          <Route path="/branding" element={<Page title="Branding" text="Complete brand identities." folder="branding" />} />
           <Route path="/contact" element={<Page title="Contact" text="Let's work together." />} />
         </Routes>
       </AnimatePresence>

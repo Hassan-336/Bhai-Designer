@@ -5,9 +5,9 @@
 
 :root {
   /* ---- Fonts (ek hi jagah) ---- */
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Poppins', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Poppins', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
   /* ---- Sizes ---- */
   --fs-xs: 0.75rem;
