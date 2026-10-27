@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'framer-
 import logo from './assets/logo.png' // 👈 apna logo yahan replace karo: src/assets/logo.png
 import './App.css'
 
+new Image().src = logo // logo ko pehle hi load shuru kar do
+
 /* 📁 Images auto-load: bas file src/assets/<page-folder>/ mein daal do, code change nahi karna */
 const glob = (files) => Object.entries(files).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([, url]) => url)
 const PAGE_IMAGES = {
@@ -170,25 +172,125 @@ function LogoReveal() {
   )
 }
 
+function Lightbox({ src, alt, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <motion.div
+      className="lightbox-overlay"
+      id="lightbox-modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.28 }}
+      onClick={onClose}
+    >
+      <motion.button
+        className="lightbox-close"
+        id="lightbox-close-btn"
+        onClick={onClose}
+        aria-label="Close preview"
+        initial={{ scale: 0, rotate: -90, opacity: 0 }}
+        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+        exit={{ scale: 0, rotate: 90, opacity: 0 }}
+        transition={{ type: 'spring', damping: 18, stiffness: 320, delay: 0.08 }}
+      >
+        ✕
+      </motion.button>
+      <motion.div
+        className="lightbox-content"
+        initial={{ scale: 0.6, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.65, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img src={src} alt={alt || 'Full size view'} />
+      </motion.div>
+    </motion.div>
+  )
+}
+
 function Page({ title, text, folder, extra }) {
+  const [activeImage, setActiveImage] = useState(null)
   const images = (folder && PAGE_IMAGES[folder]) || []
+
+  // Unbreakable seamless loop: ensure list has enough items, then repeat twice
+  let marqueeItems = images
+  if (images.length > 0 && images.length < 8) {
+    while (marqueeItems.length < 8) {
+      marqueeItems = [...marqueeItems, ...images]
+    }
+  }
+
+  const CARD_SIZES = ['size-hero', 'size-tall', 'size-wide', 'size-square']
+
   return (
     <motion.main className="page" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}>
       <Link to="/" className="back-home" id="back-home">← Home</Link>
       <h1>{title}</h1>
       <p>{text}</p>
+
       {folder && (
-        <div className="grid">
-          {images.length
-            ? images.map((src, n) => (
-              <motion.div key={src} className="card has-img" whileHover={{ y: -8, rotate: n % 2 ? -1.5 : 1.5 }}>
-                <img src={src} alt={`${title} ${n + 1}`} loading="lazy" />
-              </motion.div>
-            ))
-            : <p className="empty">Images add karne ke liye files <code>src/assets/{folder}/</code> mein daalo.</p>}
-        </div>
+        images.length ? (
+          <>
+            <div className="marquee-section" aria-label="Image slider marquee">
+              <div className="marquee-wrapper">
+                <div className="marquee-track">
+                  {marqueeItems.concat(marqueeItems).map((src, idx) => {
+                    const sizeClass = CARD_SIZES[idx % CARD_SIZES.length]
+                    const tiltClass = idx % 2 === 0 ? 'tilt-left' : 'tilt-right'
+                    return (
+                      <div
+                        key={idx}
+                        className={`marquee-card ${sizeClass} ${tiltClass}`}
+                        onClick={() => setActiveImage(src)}
+                        role="button"
+                        tabIndex={0}
+                        title="Click to view full image"
+                      >
+                        <img src={src} alt={`${title} slide ${idx + 1}`} loading="lazy" />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid">
+              {images.map((src, n) => (
+                <motion.div
+                  key={src}
+                  className="card has-img"
+                  whileHover={{ y: -8, rotate: n % 2 ? -1.5 : 1.5 }}
+                  onClick={() => setActiveImage(src)}
+                  title="Click to view full image"
+                >
+                  <img src={src} alt={`${title} ${n + 1}`} loading="lazy" />
+                </motion.div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="empty">Images add karne ke liye files <code>src/assets/{folder}/</code> mein daalo.</p>
+        )
       )}
+
       {extra}
+
+      <AnimatePresence>
+        {activeImage && (
+          <Lightbox src={activeImage} alt={title} onClose={() => setActiveImage(null)} />
+        )}
+      </AnimatePresence>
     </motion.main>
   )
 }
