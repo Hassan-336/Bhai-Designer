@@ -15,6 +15,13 @@ export default function LogoReveal() {
   useEffect(() => {
     const handleResize = () => setCols(innerWidth < 700 ? 3 : 4)
     addEventListener('resize', handleResize)
+
+    // Preload logos
+    LOGOS.forEach((l) => {
+      if (l.color) { const img = new Image(); img.src = l.color }
+      if (l.bw) { const img = new Image(); img.src = l.bw }
+    })
+
     return () => removeEventListener('resize', handleResize)
   }, [])
 
@@ -47,8 +54,23 @@ export default function LogoReveal() {
                 transition={{ type: 'spring', stiffness: 260, damping: 18 }}
                 style={{ zIndex: hover === i ? 5 : 1 }}
               >
-                {l.bw && <img className="bw" src={l.bw} alt="" aria-hidden="true" />}
-                <img className={l.bw ? 'color' : 'color auto'} src={l.color} alt={l.name} loading="lazy" />
+                {l.bw && (
+                  <img
+                    className="bw"
+                    src={l.bw}
+                    alt=""
+                    aria-hidden="true"
+                    loading="eager"
+                    decoding="async"
+                  />
+                )}
+                <img
+                  className={l.bw ? 'color' : 'color auto'}
+                  src={l.color}
+                  alt={l.name}
+                  loading="eager"
+                  decoding="async"
+                />
               </motion.div>
             )
           })}

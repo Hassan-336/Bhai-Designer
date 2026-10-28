@@ -913,7 +913,10 @@
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: opacity .6s ease, filter .6s ease;
+  transition: opacity .28s ease, filter .28s ease;
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .logo-item .bw {

@@ -30,6 +30,20 @@ export const LOGOS = (() => {
     }))
 })()
 
+/* ⚡ Preload all logos in browser cache immediately so they appear with 0ms delay */
+if (typeof window !== 'undefined') {
+  LOGOS.forEach((l) => {
+    if (l.color) {
+      const img = new Image()
+      img.src = l.color
+    }
+    if (l.bw) {
+      const img = new Image()
+      img.src = l.bw
+    }
+  })
+}
+
 /* 📬 Contact & Owner Information */
 export const CONTACT_INFO = {
   // 👈 Apna email yahan likhein (Form submit hone par is email par direct message aayega):
