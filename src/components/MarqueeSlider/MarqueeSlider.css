@@ -1,0 +1,134 @@
+/* ---------- Professional Reusable Marquee Slider Component ---------- */
+.marquee-component {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: 40px;
+  margin-bottom: 50px;
+  overflow: hidden;
+  position: relative;
+  padding: 16px 0;
+}
+
+/* Butter-smooth soft edge fade (GPU-accelerated overlay) */
+.marquee-component::before,
+.marquee-component::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(40px, 8vw, 120px);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.marquee-component::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+}
+
+.marquee-component::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+}
+
+.marquee-wrapper {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  cursor: pointer;
+  gap: var(--marquee-gap, 26px);
+  width: 100%;
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  gap: var(--marquee-gap, 26px);
+  flex-shrink: 0;
+  min-width: 100%;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  animation: marquee-scroll-smooth var(--marquee-speed, 95s) linear infinite !important;
+  padding: 24px 0;
+}
+
+.marquee-wrapper:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll-smooth {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-100% - var(--marquee-gap, 26px)), 0, 0);
+  }
+}
+
+.marquee-card {
+  flex-shrink: 0;
+  border-radius: calc(var(--radius, 16px) * 1.2);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.25s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Card size variants */
+.marquee-card.size-hero {
+  width: clamp(340px, 36vw, 480px);
+  aspect-ratio: 16 / 10;
+}
+
+.marquee-card.size-tall {
+  width: clamp(230px, 24vw, 310px);
+  aspect-ratio: 3 / 4;
+}
+
+.marquee-card.size-wide {
+  width: clamp(290px, 30vw, 400px);
+  aspect-ratio: 16 / 9;
+}
+
+.marquee-card.size-square {
+  width: clamp(240px, 25vw, 320px);
+  aspect-ratio: 1 / 1;
+}
+
+/* Subtle Organic Tilt Animation */
+.marquee-card.tilt-left {
+  transform: rotate(-1.5deg) translateY(4px);
+}
+
+.marquee-card.tilt-right {
+  transform: rotate(1.5deg) translateY(-4px);
+}
+
+.marquee-card:hover {
+  transform: scale(1.1) rotate(0deg) translateY(-8px) !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.32);
+  border-color: var(--highlight);
+  z-index: 20;
+}
+
+.marquee-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  transition: transform 0.4s ease;
+}
+
+.marquee-card:hover img {
+  transform: scale(1.05);
+}
+
+@media (max-width: 860px) {
+  .marquee-card {
+    width: 250px !important;
+  }
+}

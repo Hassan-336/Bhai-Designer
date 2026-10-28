@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import logo from './assets/logo.png' // 👈 apna logo yahan replace karo: src/assets/logo.png
+import Design from './pages/Design'
+import Logofolio from './pages/Logofolio'
+import Contact from './pages/Contact'
+import MarqueeSlider from './components/MarqueeSlider/MarqueeSlider'
+import Lightbox from './components/Lightbox/Lightbox'
 import './App.css'
 
 new Image().src = logo // logo ko pehle hi load shuru kar do
@@ -37,9 +42,9 @@ const CLIENT_MESSAGES = [
 ]
 
 const THEMES = [
-  { id: 'cream', label: 'Cream', emoji: '' },
-  { id: 'blue', label: 'Blue', emoji: '' },
-  { id: 'client', label: 'Client "Favor"', emoji: '' },
+  { id: 'cream', label: 'Cream', color: '#f5ecd9', border: 'rgba(30, 47, 255, 0.35)', title: 'Cream theme' },
+  { id: 'blue', label: 'Blue', color: '#1e2fff', border: 'rgba(255, 255, 255, 0.5)', title: 'Electric Blue theme' },
+  { id: 'client', label: 'Favor', color: '#ffd24a', border: 'rgba(0, 0, 0, 0.25)', title: 'Client Favor theme' },
 ]
 
 function Watch() {
@@ -129,109 +134,10 @@ function Home({ theme, bubbles }) {
   )
 }
 
-function LogoReveal() {
-  const ref = useRef(null)
-  const [cols, setCols] = useState(() => (innerWidth < 700 ? 3 : 4))
-  const [revealed, setRevealed] = useState(0)
-  const [hover, setHover] = useState(-1)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  useEffect(() => {
-    const f = () => setCols(innerWidth < 700 ? 3 : 4)
-    addEventListener('resize', f)
-    return () => removeEventListener('resize', f)
-  }, [])
-  // scroll progress -> kitne columns ka color aa chuka hai (last column par ruk jata hai)
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
-    setRevealed(Math.min(cols, Math.floor(Math.max(0, p - 0.05) / 0.8 * (cols + 1))))
-  })
-  if (!LOGOS.length) {
-    return <p className="empty">Logo section: logos <code>src/assets/logos/</code> mein daalo.</p>
-  }
-  const rows = Math.ceil(LOGOS.length / cols)
-  return (
-    <section className="logo-reveal" ref={ref} style={{ '--steps': cols + 2 }}>
-      <div className="logo-sticky">
-        <h2 className="logo-reveal-title">Logos <small>scroll karo ↓</small></h2>
-        <div className="logo-grid" style={{ '--cols': cols, '--rows': rows }}>
-          {LOGOS.map((l, i) => {
-            const on = i % cols < revealed || hover === i
-            return (
-              <motion.div key={l.name} className={'logo-item' + (on ? ' on' : '')}
-                onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(-1)}
-                onTouchStart={() => setHover(i)} onTouchEnd={() => setHover(-1)}
-                animate={{ scale: hover === i ? 1.35 : 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                style={{ zIndex: hover === i ? 5 : 1 }}>
-                {l.bw && <img className="bw" src={l.bw} alt="" aria-hidden="true" />}
-                <img className={l.bw ? 'color' : 'color auto'} src={l.color} alt={l.name} loading="lazy" />
-              </motion.div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Lightbox({ src, alt, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-    }
-  }, [onClose])
-
-  return (
-    <motion.div
-      className="lightbox-overlay"
-      id="lightbox-modal"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.28 }}
-      onClick={onClose}
-    >
-      <motion.button
-        className="lightbox-close"
-        id="lightbox-close-btn"
-        onClick={onClose}
-        aria-label="Close preview"
-        initial={{ scale: 0, rotate: -90, opacity: 0 }}
-        animate={{ scale: 1, rotate: 0, opacity: 1 }}
-        exit={{ scale: 0, rotate: 90, opacity: 0 }}
-        transition={{ type: 'spring', damping: 18, stiffness: 320, delay: 0.08 }}
-      >
-        ✕
-      </motion.button>
-      <motion.div
-        className="lightbox-content"
-        initial={{ scale: 0.6, opacity: 0, y: 30 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.65, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img src={src} alt={alt || 'Full size view'} />
-      </motion.div>
-    </motion.div>
-  )
-}
 
 function Page({ title, text, folder, extra }) {
   const [activeImage, setActiveImage] = useState(null)
   const images = (folder && PAGE_IMAGES[folder]) || []
-
-  // Unbreakable seamless loop: ensure list has enough items, then repeat twice
-  let marqueeItems = images
-  if (images.length > 0 && images.length < 8) {
-    while (marqueeItems.length < 8) {
-      marqueeItems = [...marqueeItems, ...images]
-    }
-  }
-
-  const CARD_SIZES = ['size-hero', 'size-tall', 'size-wide', 'size-square']
 
   return (
     <motion.main className="page" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}>
@@ -242,28 +148,11 @@ function Page({ title, text, folder, extra }) {
       {folder && (
         images.length ? (
           <>
-            <div className="marquee-section" aria-label="Image slider marquee">
-              <div className="marquee-wrapper">
-                <div className="marquee-track">
-                  {marqueeItems.concat(marqueeItems).map((src, idx) => {
-                    const sizeClass = CARD_SIZES[idx % CARD_SIZES.length]
-                    const tiltClass = idx % 2 === 0 ? 'tilt-left' : 'tilt-right'
-                    return (
-                      <div
-                        key={idx}
-                        className={`marquee-card ${sizeClass} ${tiltClass}`}
-                        onClick={() => setActiveImage(src)}
-                        role="button"
-                        tabIndex={0}
-                        title="Click to view full image"
-                      >
-                        <img src={src} alt={`${title} slide ${idx + 1}`} loading="lazy" />
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
+            <MarqueeSlider
+              images={images}
+              title={title}
+              onImageClick={(src) => setActiveImage(src)}
+            />
 
             <div className="grid">
               {images.map((src, n) => (
@@ -428,12 +317,31 @@ export default function App() {
           <NavLink to="/branding" className={link}>Branding</NavLink>
         </nav>
         <div className="nav-right">
-          <div className="switcher" role="group" aria-label="Theme">
-            {THEMES.map((t) => (
-              <button key={t.id} id={`theme-${t.id}`} className={theme === t.id ? 'on' : ''} onClick={(e) => changeTheme(t.id, e)}>
-                <span>{t.emoji}</span> <span className="label">{t.label}</span>
-              </button>
-            ))}
+          <div className="switcher" role="group" aria-label="Theme Color Switcher">
+            <span className="switcher-icon" title="Theme Palette" aria-hidden="true">🎨</span>
+            <div className="switcher-buttons">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  id={`theme-${t.id}`}
+                  className={`theme-btn ${theme === t.id ? 'on' : ''}`}
+                  onClick={(e) => changeTheme(t.id, e)}
+                  title={t.title}
+                  aria-label={t.title}
+                  aria-pressed={theme === t.id}
+                >
+                  <span
+                    className="theme-dot"
+                    style={{
+                      backgroundColor: t.color,
+                      borderColor: t.border || 'transparent',
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span className="label">{t.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
           <NavLink to="/contact" className={link}>Contact</NavLink>
         </div>
@@ -443,10 +351,10 @@ export default function App() {
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home theme={theme} bubbles={bubbles} />} />
           <Route path="/about" element={<About />} />
-          <Route path="/logofolio" element={<Page title="Logofolio" text="Selected logo work." folder="logofolio" />} />
-          <Route path="/design" element={<Page title="Design" text="Posters, social media & print design." folder="design" extra={<LogoReveal />} />} />
+          <Route path="/logofolio" element={<Logofolio />} />
+          <Route path="/design" element={<Design />} />
           <Route path="/branding" element={<Page title="Branding" text="Complete brand identities." folder="branding" />} />
-          <Route path="/contact" element={<Page title="Contact" text="Let's work together." />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </AnimatePresence>
 
